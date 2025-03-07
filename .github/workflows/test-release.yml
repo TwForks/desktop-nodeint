@@ -58,7 +58,7 @@ jobs:
 
     - name: List artifacts (debug)
       run: |
-        ls art/ -f | echo
+        ls art/ -f
   
     - name: Upload release (ubuntu-latest)
       uses: svenstaro/upload-release-action@2.2.1
