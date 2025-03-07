@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  workflow_dispatch:
+#  push:
+#    tags:
+#    - 'v*'
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+    - name: CI
+      run: |
+        mkdir dist
+  build:
+    runs-on: ${{ matrix.os }}
+
+    permissions:
+      contents: write
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    needs: [ci]
+    steps:
+    - name: Compile
+      run: |
+        touch dist/${{ matrix.os }}.txt
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    needs: [build]
+    steps:
+    - name: Release
+      uses: actions/create-release@2c591bcc8ecdcd2db72b97d6147f871fcd833ba5
+      with:
+        tag: ${{ github.ref_name }}
+        name: Test ${{ github.ref_name }}
+        body: Test ${{ github.ref_name }}"
+        draft: false
+        prerelease: true
+        artifacts: dist/
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
