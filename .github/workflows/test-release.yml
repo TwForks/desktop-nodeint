@@ -56,14 +56,26 @@ jobs:
       with:
         path: art/
   
-    - name: Release
-      uses: ncipollo/release-action@2c591bcc8ecdcd2db72b97d6147f871fcd833ba5
+    - name: Upload release (ubuntu-latest)
+      uses: svenstaro/upload-release-action@2.2.1
       with:
-        tag: ${{ github.ref_name }}
-        name: Test ${{ github.ref_name }}
-        body: Test ${{ github.ref_name }}"
-        draft: false
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: art/ubuntu-latest.zip
+        asset_name: debian.zip
+        tag: latest
+        overwrite: true
         prerelease: true
-        artifacts: art/
+        body: "Test Build"
+
+    - name: Upload release (windows-latest)
+      uses: svenstaro/upload-release-action@2.2.1
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: art/windows-latest.zip
+        asset_name: windows.zip
+        tag: latest
+        overwrite: true
+        prerelease: true
+        body: "Test Build"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
