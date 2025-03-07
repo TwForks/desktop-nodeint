@@ -57,7 +57,7 @@ jobs:
         path: art/
   
     - name: Release
-      uses: actions/create-release@2c591bcc8ecdcd2db72b97d6147f871fcd833ba5
+      uses: ncipollo/release-action@2c591bcc8ecdcd2db72b97d6147f871fcd833ba5
       with:
         tag: ${{ github.ref_name }}
         name: Test ${{ github.ref_name }}
