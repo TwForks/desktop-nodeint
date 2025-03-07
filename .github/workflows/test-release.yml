@@ -55,6 +55,10 @@ jobs:
       uses: actions/download-artifact@v4.1.9
       with:
         path: art/
+
+    - name: List artifacts (debug)
+      run: |
+        ls art/ -f | echo
   
     - name: Upload release (ubuntu-latest)
       uses: svenstaro/upload-release-action@2.2.1
