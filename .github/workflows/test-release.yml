@@ -55,16 +55,12 @@ jobs:
       uses: actions/download-artifact@v4.1.9
       with:
         path: art/
-
-    - name: List artifacts (debug)
-      run: |
-        ls art/ -f
   
     - name: Upload release (ubuntu-latest)
       uses: svenstaro/upload-release-action@2.2.1
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: art/ubuntu-latest.zip
+        file: art/ubuntu-latest
         asset_name: debian.zip
         tag: latest
         overwrite: true
@@ -75,7 +71,7 @@ jobs:
       uses: svenstaro/upload-release-action@2.2.1
       with:
         repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: art/windows-latest.zip
+        file: art/windows-latest
         asset_name: windows.zip
         tag: latest
         overwrite: true
