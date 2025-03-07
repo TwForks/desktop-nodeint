@@ -7,6 +7,24 @@ on:
 #    - 'v*'
 
 jobs:
+  ci:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      with:
+        submodules: recursive
+        persist-credentials: false
+    - name: Install Node.js
+      uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
+      with:
+        node-version: 20.x
+        cache: 'npm'
+    - name: Install dependencies
+      run: npm ci
+    - name: Fetch
+      run: npm run fetch
+
   build:
     runs-on: ${{ matrix.os }}
 
@@ -17,20 +35,8 @@ jobs:
       matrix:
         os: [ubuntu-latest, windows-latest]
 
+    needs: [ci]
     steps:
-    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
-      with:
-        submodules: recursive
-        persist-credentials: false
-    - name: Install Node.js
-      uses: actions/setup-node@39370e3970a6d050c480ffad4ff0ed4d3fdee5af
-      with:
-        node-version: 20.x
-    - name: Install dependencies
-      run: npm ci
-    - name: Fetch
-      run: npm run fetch
-
     - name: Compile
       run: npm run webpack:prod
 
