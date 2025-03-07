@@ -20,10 +20,6 @@ jobs:
       with:
         node-version: 20.x
         cache: 'npm'
-    - name: Install dependencies
-      run: npm ci
-    - name: Fetch
-      run: npm run fetch
 
   build:
     runs-on: ${{ matrix.os }}
@@ -37,13 +33,18 @@ jobs:
 
     needs: [ci]
     steps:
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Fetch
+      run: npm run fetch
+    
     - name: Compile
       run: npm run webpack:prod
 
     - name: Package Windows
       if: runner.os == 'Windows'
       run: |
-        node release-automation/build.js --windows --microsoft-store --x64 --ia32 --arm64 --production
         node release-automation/build.js --windows-portable --x64 --production
         node release-automation/build.js --windows-legacy --ia32 --x64 --production
       env:
@@ -56,6 +57,13 @@ jobs:
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.os }}
+        retention-days: 1
+        path: dist/
+
   release:
     runs-on: ubuntu-latest
 
@@ -64,14 +72,35 @@ jobs:
 
     needs: [build]
     steps:
-    - name: Release
-      uses: actions/create-release@2c591bcc8ecdcd2db72b97d6147f871fcd833ba5
+    - name: Setup artifact uploads
+      run: |
+        mkdir art/
+  
+    - name: Download artifacts
+      uses: actions/download-artifact@v4.1.9
       with:
-        tag: ${{ github.ref_name }}
-        name: Build ${{ github.ref_name }}
-        body: Build ${{ github.ref_name }}"
-        draft: false
+        path: art/
+
+    - name: Upload release (ubuntu-latest)
+      uses: svenstaro/upload-release-action@2.2.1
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: art/ubuntu-latest
+        asset_name: debian.zip
+        tag: latest
+        overwrite: true
         prerelease: true
-        artifacts: dist/
+        body: "Build"
+
+    - name: Upload release (windows-latest)
+      uses: svenstaro/upload-release-action@2.2.1
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: art/windows-latest
+        asset_name: windows.zip
+        tag: latest
+        overwrite: true
+        prerelease: true
+        body: "Build"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
