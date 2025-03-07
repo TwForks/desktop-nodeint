@@ -6,7 +6,7 @@ on:
     - 'v*'
 
 jobs:
-  release:
+  build:
     runs-on: ${{ matrix.os }}
 
     permissions:
@@ -14,7 +14,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest]
 
     steps:
     - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
@@ -41,36 +41,6 @@ jobs:
         node release-automation/build.js --windows-legacy --ia32 --x64 --production
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: Upload Microsoft Store Artifact
-      if: runner.os == 'Windows'
-      uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b
-      with:
-        name: appx
-        path: dist/*.appx
-
-    - name: Package macOS
-      if: runner.os == 'macOS'
-      run: |
-        # I don't trust GitHub Actions to not accidentally log shell substitutions somewhere, so we
-        # use Python instead of "echo $SECRET >" to write the private key to a file as needed by notarytool.
-        python3 -c "import os; open(os.getenv('APPLE_API_KEY_NAME'), 'w').write(os.getenv('APPLE_API_KEY_DATA'))" >/dev/null 2>&1
-        # @electron/notaraize documentation says key should be an absolute path
-        export APPLE_API_KEY="$(pwd)/$APPLE_API_KEY_NAME"
-        node release-automation/build.js --mac --universal --production
-        node release-automation/build.js --mac-legacy --x64 --production
-        # for safety
-        rm "$APPLE_API_KEY_NAME"
-      env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
-        APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
-        APPLE_API_KEY_NAME: ${{ secrets.APPLE_API_KEY_NAME }}
-        APPLE_API_KEY_DATA: ${{ secrets.APPLE_API_KEY_DATA }}
-        # base64 -i Certificates.p12
-        CSC_LINK: ${{ secrets.APPLE_CSC_LINK }}
-        # electron-builder documentation says password won't be escaped, so don't use any
-        # special characters that the shell will mess with
-        CSC_KEY_PASSWORD: ${{ secrets.APPLE_CSC_KEY_PASSWORD }}
 
     - name: Package Linux
       if: runner.os == 'Linux'
@@ -78,3 +48,23 @@ jobs:
         node release-automation/build.js --debian --tarball --appimage --x64 --armv7l --arm64 --production
       env:
         GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    needs: [build]
+    steps:
+    - name: Release
+      uses: actions/create-release@2c591bcc8ecdcd2db72b97d6147f871fcd833ba5
+      with:
+        tag: ${{ github.ref_name }}
+        name: Build ${{ github.ref_name }}
+        body: Build ${{ github.ref_name }}"
+        draft: false
+        prerelease: true
+        artifacts: dist/
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
